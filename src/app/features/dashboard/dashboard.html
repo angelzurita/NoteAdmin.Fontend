@@ -1,0 +1,43 @@
+<div class="space-y-8">
+  <!-- Greeting -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">{{ greeting() }}</h1>
+    <p class="mt-1 text-sm text-gray-500">Resumen de tu espacio de trabajo</p>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Card: Notes -->
+    <a
+      routerLink="/notes"
+      class="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">Notas</h3>
+      </div>
+      <p class="mt-3 text-sm text-gray-500">Gestiona tus notas: crea, edita y organiza tu contenido.</p>
+    </a>
+
+    <!-- Card: Create Note -->
+    <a
+      routerLink="/notes/create"
+      class="group flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors">Nueva Nota</h3>
+      </div>
+      <p class="mt-3 text-sm text-gray-500">Empieza a escribir una nueva nota con el editor enriquecido.</p>
+    </a>
+  </div>
+</div>
