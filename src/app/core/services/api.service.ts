@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../models/api-response.model';
 
 export interface RequestOptions {
   headers?: HttpHeaders;
@@ -17,32 +18,32 @@ export class ApiService {
 
   get<T>(endpoint: string, options?: RequestOptions): Observable<T> {
     return this.http
-      .get<T>(this.buildUrl(endpoint), this.buildOptions(options))
-      .pipe(catchError(this.handleError));
+      .get<ApiResponse<T>>(this.buildUrl(endpoint), this.buildOptions(options))
+      .pipe(map((res) => this.unwrap(res)), catchError(this.handleError));
   }
 
   post<T>(endpoint: string, body: unknown, options?: RequestOptions): Observable<T> {
     return this.http
-      .post<T>(this.buildUrl(endpoint), body, this.buildOptions(options))
-      .pipe(catchError(this.handleError));
+      .post<ApiResponse<T>>(this.buildUrl(endpoint), body, this.buildOptions(options))
+      .pipe(map((res) => this.unwrap(res)), catchError(this.handleError));
   }
 
   put<T>(endpoint: string, body: unknown, options?: RequestOptions): Observable<T> {
     return this.http
-      .put<T>(this.buildUrl(endpoint), body, this.buildOptions(options))
-      .pipe(catchError(this.handleError));
+      .put<ApiResponse<T>>(this.buildUrl(endpoint), body, this.buildOptions(options))
+      .pipe(map((res) => this.unwrap(res)), catchError(this.handleError));
   }
 
   patch<T>(endpoint: string, body: unknown, options?: RequestOptions): Observable<T> {
     return this.http
-      .patch<T>(this.buildUrl(endpoint), body, this.buildOptions(options))
-      .pipe(catchError(this.handleError));
+      .patch<ApiResponse<T>>(this.buildUrl(endpoint), body, this.buildOptions(options))
+      .pipe(map((res) => this.unwrap(res)), catchError(this.handleError));
   }
 
   delete<T>(endpoint: string, options?: RequestOptions): Observable<T> {
     return this.http
-      .delete<T>(this.buildUrl(endpoint), this.buildOptions(options))
-      .pipe(catchError(this.handleError));
+      .delete<ApiResponse<T>>(this.buildUrl(endpoint), this.buildOptions(options))
+      .pipe(map((res) => this.unwrap(res)), catchError(this.handleError));
   }
 
   private buildUrl(endpoint: string): string {
@@ -61,6 +62,18 @@ export class ApiService {
           : new HttpParams({ fromObject: options.params });
     }
     return result;
+  }
+
+  /**
+   * Desenvuelve la respuesta del backend:
+   * { success, message, data, errors } → data
+   * Si la respuesta no tiene la estructura envolvente, la retorna tal cual.
+   */
+  private unwrap<T>(response: ApiResponse<T> | T): T {
+    if (response && typeof response === 'object' && 'data' in response && 'success' in response) {
+      return (response as ApiResponse<T>).data;
+    }
+    return response as T;
   }
 
   private handleError(error: unknown): Observable<never> {

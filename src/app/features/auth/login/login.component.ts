@@ -1,9 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+
 import { AuthService } from '../../../core/services/auth.service';
-
-
 
 @Component({
   selector: 'app-login',
@@ -35,14 +35,19 @@ export class LoginComponent {
     this.errorMessage.set(null);
 
     const { email, password } = this.loginForm.getRawValue();
-    const success = this.authService.login({ email, password });
-
-    if (success) {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.errorMessage.set('Credenciales incorrectas. Usa admin@notes.com / admin123');
-      this.isSubmitting.set(false);
-    }
+    this.authService.login({ email, password }).subscribe({
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err: HttpErrorResponse) => {
+        const msg =
+          typeof err.error?.message === 'string'
+            ? err.error.message
+            : 'Credenciales incorrectas';
+        this.errorMessage.set(msg);
+        this.isSubmitting.set(false);
+      },
+    });
   }
 
   hasError(field: 'email' | 'password', error: string): boolean {

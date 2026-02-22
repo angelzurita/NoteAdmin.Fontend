@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.notesadmin.com/v1',
+  apiUrl: 'https://localhost:5001/api',
 };

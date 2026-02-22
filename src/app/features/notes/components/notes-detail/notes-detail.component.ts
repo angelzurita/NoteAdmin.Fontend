@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 
 import { NotesFacade } from '../../services/notes-facade.service';
 import { LoadingComponent, ErrorComponent } from '../../../../shared/components';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-notes-detail',
@@ -23,6 +24,8 @@ export class NotesDetailComponent implements OnInit {
 
   private noteId = '';
 
+  constructor(private sanitizer: DomSanitizer) {}
+
   ngOnInit(): void {
     this.noteId = this.route.snapshot.paramMap.get('id') ?? '';
     this.facade.loadOne(this.noteId);
@@ -39,4 +42,16 @@ export class NotesDetailComponent implements OnInit {
   retry(): void {
     this.facade.loadOne(this.noteId);
   }
+
+  
+getFormattedContent(content: string): SafeHtml {
+  if (!content) return '';
+
+  const cleaned = content
+    .replace(/&nbsp;/g, ' ')      // Reemplaza espacios duros
+    .replace(/\u00A0/g, ' ')      // Seguridad extra
+    .trim();
+
+  return this.sanitizer.bypassSecurityTrustHtml(cleaned);
+}
 }

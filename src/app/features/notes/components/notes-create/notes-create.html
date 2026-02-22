@@ -4,60 +4,128 @@
     <p class="mt-1 text-sm text-gray-500">Crea una nueva nota con el editor enriquecido</p>
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 rounded-xl bg-white p-6 shadow-sm border border-gray-200">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()"
+    class="space-y-6 rounded-xl bg-white p-6 shadow-sm border border-gray-200">
     <!-- Title -->
     <div>
       <label for="title" class="block text-sm font-medium text-gray-700">Título</label>
-      <input
-        id="title"
-        type="text"
-        formControlName="title"
+      <input id="title" type="text" formControlName="title"
         class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        placeholder="Título de la nota"
-      />
+        placeholder="Título de la nota" />
       @if (hasError('title', 'required')) {
-        <p class="mt-1 text-xs text-red-600">El título es obligatorio</p>
+      <p class="mt-1 text-xs text-red-600">El título es obligatorio</p>
       }
       @if (hasError('title', 'minlength')) {
-        <p class="mt-1 text-xs text-red-600">Mínimo 3 caracteres</p>
+      <p class="mt-1 text-xs text-red-600">Mínimo 3 caracteres</p>
       }
       @if (hasError('title', 'maxlength')) {
-        <p class="mt-1 text-xs text-red-600">Máximo 200 caracteres</p>
+      <p class="mt-1 text-xs text-red-600">Máximo 200 caracteres</p>
+      }
+    </div>
+
+    <!-- Category -->
+    <div>
+      <label for="categoryId" class="block text-sm font-medium text-gray-700">Categoría</label>
+      <select id="categoryId" formControlName="categoryId"
+        class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        <option value="" disabled>Selecciona una categoría</option>
+        @for (cat of categories(); track cat.id) {
+        <option [value]="cat.id">{{ cat.name }}</option>
+        }
+      </select>
+      @if (hasError('categoryId', 'required')) {
+      <p class="mt-1 text-xs text-red-600">La categoría es obligatoria</p>
       }
     </div>
 
     <!-- Content -->
     <div>
-      <label class="block text-sm font-medium text-gray-700">Contenido</label>
-      <quill-editor
-        formControlName="content"
-        [modules]="quillModules"
-        placeholder="Escribe el contenido de tu nota..."
-        class="mt-1"
-      ></quill-editor>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
+
+      <!-- Custom Quill toolbar -->
+      <div id="toolbar-notes-create"
+        class="flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-gray-300 bg-gray-50 px-2 py-1">
+        <span class="ql-formats">
+          <button class="ql-bold" title="Negrita"></button>
+          <button class="ql-italic" title="Cursiva"></button>
+          <button class="ql-underline" title="Subrayado"></button>
+          <button class="ql-strike" title="Tachado"></button>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-blockquote" title="Cita"></button>
+          <button class="ql-code-block" title="Código"></button>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-header" value="1" title="Encabezado 1"></button>
+          <button class="ql-header" value="2" title="Encabezado 2"></button>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-list" value="ordered" title="Lista ordenada"></button>
+          <button class="ql-list" value="bullet" title="Lista"></button>
+          <button class="ql-indent" value="-1" title="Disminuir sangría"></button>
+          <button class="ql-indent" value="+1" title="Aumentar sangría"></button>
+        </span>
+        <span class="ql-formats">
+          <button class="ql-link" title="Enlace"></button>
+          <button class="ql-clean" title="Limpiar formato"></button>
+        </span>
+
+        <!-- Emoji button -->
+        <span class="ql-formats relative">
+          <button type="button" (click)="$event.stopPropagation(); toggleEmojiPicker()" title="Emojis"
+            class="ql-emoji flex items-center justify-center text-base leading-none"
+            [class.text-indigo-600]="showEmojiPicker()">😊</button>
+
+          @if (showEmojiPicker()) {
+          <!-- Backdrop -->
+          <div class="fixed inset-0 z-10" (click)="closeEmojiPicker()"></div>
+
+          <!-- Picker panel -->
+          <div class="absolute left-0 top-8 z-20 w-80 rounded-xl border border-gray-200 bg-white p-3 shadow-xl"
+            (click)="$event.stopPropagation()">
+            <!-- Category tabs -->
+            <div class="flex gap-1 overflow-x-auto border-b border-gray-100 pb-2 mb-2">
+              @for (cat of emojiCategories; track cat.label; let i = $index) {
+              <button type="button" (click)="selectedEmojiCategory.set(i)" [title]="cat.label"
+                class="flex-shrink-0 rounded-lg px-2 py-1 text-base transition-colors hover:bg-gray-100"
+                [class.bg-indigo-100]="selectedEmojiCategory() === i" [class.ring-1]="selectedEmojiCategory() === i"
+                [class.ring-indigo-300]="selectedEmojiCategory() === i">{{ cat.icon }}</button>
+              }
+            </div>
+            <!-- Emoji grid -->
+            <div class="grid grid-cols-8 gap-0.5 max-h-44 overflow-y-auto">
+              @for (emoji of emojiCategories[selectedEmojiCategory()].emojis; track emoji) {
+              <button type="button" (click)="insertEmoji(emoji)"
+                class="flex items-center justify-center rounded p-1 text-lg hover:bg-gray-100 transition-colors"
+                [title]="emoji">{{ emoji }}</button>
+              }
+            </div>
+          </div>
+          }
+        </span>
+        <quill-editor class="textBox" formControlName="content" [modules]="quillModules"
+          placeholder="Escribe el contenido de tu nota..."></quill-editor>
+      </div>
+
+
       @if (hasError('content', 'required')) {
-        <p class="mt-1 text-xs text-red-600">El contenido es obligatorio</p>
+      <p class="mt-1 text-xs text-red-600">El contenido es obligatorio</p>
       }
     </div>
 
     <!-- Actions -->
     <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
-      <button
-        type="button"
+      <button type="button"
         class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        (click)="cancel()"
-      >
+        (click)="cancel()">
         Cancelar
       </button>
-      <button
-        type="submit"
-        [disabled]="loading()"
-        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-      >
+      <button type="submit" [disabled]="loading()"
+        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 transition-colors">
         @if (loading()) {
-          Guardando...
+        Guardando...
         } @else {
-          Crear Nota
+        Crear Nota
         }
       </button>
     </div>

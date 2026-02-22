@@ -1,13 +1,15 @@
 export interface ApiResponse<T> {
-  data: T;
+  success: boolean;
   message: string;
-  statusCode: number;
+  data: T;
+  errors: string[];
 }
 
 export interface ApiErrorResponse {
+  success: boolean;
   message: string;
-  statusCode: number;
-  errors?: Record<string, string[]>;
+  data: unknown;
+  errors: string[];
 }
 
 export interface PaginatedResponse<T> {

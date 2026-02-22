@@ -27,6 +27,16 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/notes/notes.routes').then((m) => m.NOTES_ROUTES),
       },
+      {
+        path: 'categories',
+        loadChildren: () =>
+          import('./features/categories/categories.routes').then((m) => m.CATEGORIES_ROUTES),
+      },
+      {
+        path: 'files',
+        loadChildren: () =>
+          import('./features/files/files.routes').then((m) => m.FILES_ROUTES),
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

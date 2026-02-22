@@ -1,13 +1,16 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 
-import { AuthTokens, AuthUser, JwtPayload, LoginRequest } from '../models';
+import { AuthUser, JwtPayload, LoginRequest } from '../models';
+import { environment } from '../../../environments/environment';
 
 const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly currentUser = signal<AuthUser | null>(null);
   private readonly tokenExpiration = signal<number>(0);
@@ -23,31 +26,74 @@ export class AuthService {
     this.restoreSession();
   }
 
-  login(credentials: LoginRequest): boolean {
-    // --- Simulated JWT authentication ---
-    if (credentials.email === 'admin@notes.com' && credentials.password === 'admin123') {
-      const now = Date.now();
-      const expiresIn = 3600; // 1 hour in seconds
-      const payload: JwtPayload = {
-        sub: 'usr_001',
-        email: credentials.email,
-        name: 'Admin User',
-        iat: Math.floor(now / 1000),
-        exp: Math.floor(now / 1000) + expiresIn,
-      };
-      const fakeToken = this.encodeJwt(payload);
-      const tokens: AuthTokens = {
-        accessToken: fakeToken,
-        refreshToken: `refresh_${crypto.randomUUID()}`,
-        expiresIn,
-      };
+  /**
+   * Llama al endpoint real POST /auth/login.
+   * La respuesta puede devolver el token en distintas formas;
+   * se normaliza buscando 'token', 'accessToken' o 'access_token'.
+   */
+  login(credentials: LoginRequest): Observable<unknown> {
+    return this.http
+      .post<Record<string, unknown>>(`${environment.apiUrl}/auth/login`, credentials)
+      .pipe(
+        tap((response) => {
+          const token = this.extractToken(response);
+          if (!token) {
+            throw new Error('No se recibió token del servidor');
+          }
+          this.storeToken(token);
 
-      this.storeTokens(tokens);
-      this.currentUser.set({ id: payload.sub, email: payload.email, name: payload.name });
-      this.tokenExpiration.set(now + expiresIn * 1000);
-      return true;
-    }
-    return false;
+          const payload = this.decodeJwt(token);
+          const claims = (payload ?? {}) as Record<string, unknown>;
+
+          const expValue = claims['exp'];
+          const expSeconds =
+            typeof expValue === 'number'
+              ? expValue
+              : typeof expValue === 'string'
+                ? Number(expValue)
+                : NaN;
+
+          const email =
+            typeof claims['email'] === 'string' ? claims['email'] : credentials.email;
+
+          const nameClaim =
+            claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+          const name =
+            typeof nameClaim === 'string'
+              ? nameClaim
+              : typeof claims['name'] === 'string'
+                ? claims['name']
+                : email;
+
+          const id =
+            typeof claims['sub'] === 'string'
+              ? claims['sub']
+              : typeof claims['uid'] === 'string'
+                ? claims['uid']
+                : '';
+
+          if (payload && Number.isFinite(expSeconds) && expSeconds > 0) {
+            const expirationMs = expSeconds * 1000;
+            this.currentUser.set({
+              id,
+              email,
+              name,
+            });
+            this.tokenExpiration.set(expirationMs);
+          } else {
+            // Si no se puede decodificar, confiamos en que es válido 1h
+            this.currentUser.set({
+              id: '',
+              email: credentials.email,
+              name: credentials.email,
+            });
+            this.tokenExpiration.set(Date.now() + 3600 * 1000);
+          }
+        }),
+        catchError((error) => {
+          return throwError(() => error);
+        }),
+      );
   }
 
   logout(): void {
@@ -55,7 +101,6 @@ export class AuthService {
     this.tokenExpiration.set(0);
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
     }
     this.router.navigate(['/auth/login']);
   }
@@ -65,10 +110,9 @@ export class AuthService {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
-  private storeTokens(tokens: AuthTokens): void {
+  private storeToken(token: string): void {
     if (typeof localStorage === 'undefined') return;
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    localStorage.setItem(ACCESS_TOKEN_KEY, token);
   }
 
   private restoreSession(): void {
@@ -78,21 +122,60 @@ export class AuthService {
     const payload = this.decodeJwt(token);
     if (!payload) return;
 
-    const expirationMs = payload.exp * 1000;
+    const claims = payload as Record<string, unknown>;
+    const expValue = claims['exp'];
+    const expSeconds =
+      typeof expValue === 'number'
+        ? expValue
+        : typeof expValue === 'string'
+          ? Number(expValue)
+          : NaN;
+
+    if (!Number.isFinite(expSeconds) || expSeconds <= 0) {
+      this.logout();
+      return;
+    }
+
+    const expirationMs = expSeconds * 1000;
     if (expirationMs <= Date.now()) {
       this.logout();
       return;
     }
 
-    this.currentUser.set({ id: payload.sub, email: payload.email, name: payload.name });
+    const email = typeof claims['email'] === 'string' ? claims['email'] : '';
+    const nameClaim = claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+    const name =
+      typeof nameClaim === 'string'
+        ? nameClaim
+        : typeof claims['name'] === 'string'
+          ? claims['name']
+          : email;
+
+    this.currentUser.set({
+      id:
+        typeof claims['sub'] === 'string'
+          ? claims['sub']
+          : typeof claims['uid'] === 'string'
+            ? claims['uid']
+            : '',
+      email,
+      name,
+    });
     this.tokenExpiration.set(expirationMs);
   }
 
-  private encodeJwt(payload: JwtPayload): string {
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-    const body = btoa(JSON.stringify(payload));
-    const signature = btoa('simulated-signature');
-    return `${header}.${body}.${signature}`;
+  private extractToken(response: Record<string, unknown>): string | null {
+    // Soporta: { token }, { accessToken }, { access_token }, { data: { token } }
+    if (typeof response['token'] === 'string') return response['token'];
+    if (typeof response['accessToken'] === 'string') return response['accessToken'];
+    if (typeof response['access_token'] === 'string') return response['access_token'];
+    const data = response['data'];
+    if (data && typeof data === 'object') {
+      const d = data as Record<string, unknown>;
+      if (typeof d['token'] === 'string') return d['token'];
+      if (typeof d['accessToken'] === 'string') return d['accessToken'];
+    }
+    return null;
   }
 
   private decodeJwt(token: string): JwtPayload | null {
