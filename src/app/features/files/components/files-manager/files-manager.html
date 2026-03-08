@@ -1,0 +1,391 @@
+<div class="flex h-[calc(100vh-4rem)] gap-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+  <!-- ═══════════════ SIDEBAR DE CARPETAS ═══════════════ -->
+  <aside class="flex w-56 flex-shrink-0 flex-col border-r border-gray-200 bg-gray-50">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+      <span class="text-xs font-semibold uppercase tracking-widest text-gray-500">Carpetas</span>
+      <button
+        type="button"
+        (click)="showNewFolderInput.set(!showNewFolderInput())"
+        title="Nueva carpeta"
+        class="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-indigo-600 transition-colors"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+      </button>
+    </div>
+
+    @if (showNewFolderInput()) {
+      <div class="px-3 py-2 border-b border-gray-200">
+        @if (activeFolderId()) {
+          <p class="mb-1 truncate text-xs text-gray-400">en: {{ folderContents()?.folderName }}</p>
+        }
+        <div class="flex gap-1">
+          <input
+            type="text"
+            placeholder="Nombre…"
+            [ngModel]="newFolderName()"
+            (ngModelChange)="newFolderName.set($event)"
+            (keydown.enter)="createFolder()"
+            class="flex-1 min-w-0 rounded border border-gray-300 px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <button type="button" (click)="createFolder()"
+            class="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-500">OK</button>
+        </div>
+      </div>
+    }
+
+    <nav class="flex-1 overflow-y-auto py-1">
+      <!-- Raíz -->
+      <button
+        type="button"
+        (click)="navigateToRoot()"
+        class="folder-item w-full"
+        [class.active]="activeFolderId() === null"
+      >
+        <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        </svg>
+        <span class="flex-1 truncate text-left">Inicio</span>
+      </button>
+
+      <!-- Árbol recursivo de carpetas -->
+      @for (node of flatTree(); track node.folder.id) {
+        <div class="group relative flex items-center" [style.padding-left.px]="(node.depth * 12) + 4">
+          <!-- Toggle expandir/colapsar -->
+          <button
+            type="button"
+            class="shrink-0 rounded p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+            (click)="toggleFolder(node.folder.id)"
+            [style.visibility]="node.hasChildren ? 'visible' : 'hidden'"
+          >
+            @if (node.isExpanded) {
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            } @else {
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            }
+          </button>
+
+          <button
+            type="button"
+            (click)="navigateToSidebarFolder(node.folder)"
+            class="folder-item flex-1 min-w-0"
+            [class.active]="activeFolderId() === node.folder.id"
+          >
+            <svg class="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/>
+            </svg>
+            <span class="flex-1 truncate text-left">{{ node.folder.name }}</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="deleteFolder(node.folder)"
+            title="Eliminar carpeta"
+            class="absolute right-1 hidden group-hover:flex items-center justify-center rounded p-0.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      }
+    </nav>
+  </aside>
+
+  <!-- ═══════════════ ÁREA PRINCIPAL ═══════════════ -->
+  <div class="flex flex-1 flex-col overflow-hidden">
+
+    <!-- Toolbar -->
+    <div class="flex items-center gap-3 border-b border-gray-200 bg-white px-5 py-3">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center gap-1 text-sm min-w-0 flex-1 overflow-hidden">
+        <button type="button" (click)="navigateToRoot()"
+          class="shrink-0 font-medium text-gray-500 hover:text-indigo-600 transition-colors">
+          Inicio
+        </button>
+        @for (crumb of breadcrumbs(); track crumb.id; let i = $index) {
+          <svg class="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <button type="button" (click)="navigateToCrumb(i)"
+            class="truncate font-medium transition-colors"
+            [class.text-gray-900]="$last"
+            [class.font-semibold]="$last"
+            [class.text-gray-500]="!$last"
+            [class.hover:text-indigo-600]="!$last">
+            {{ crumb.name }}
+          </button>
+        }
+        <span class="ml-1 shrink-0 text-xs font-normal text-gray-400">
+          ({{ subFolders().length }} carpetas · {{ visibleFiles().length }} archivos)
+        </span>
+      </nav>
+
+      <div class="relative flex-1 max-w-xs ml-auto">
+        <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-4.35-4.35M17 11A6 6 0 1 0 5 11a6 6 0 0 0 12 0z"/>
+        </svg>
+        <input
+          type="search"
+          placeholder="Buscar archivos…"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          class="w-full rounded-lg border border-gray-300 py-1.5 pl-9 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+
+      <button
+        type="button"
+        (click)="triggerUpload()"
+        class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/>
+        </svg>
+        Subir archivos
+      </button>
+
+      <input
+        #fileInput
+        type="file"
+        multiple
+        class="hidden"
+        (change)="onFilesSelected($event)"
+      />
+    </div>
+
+    @if (uploadError()) {
+      <div class="mx-5 mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200 flex items-center justify-between">
+        <span>{{ uploadError() }}</span>
+        <button type="button" (click)="uploadError.set('')" class="ml-2 text-red-500 hover:text-red-700">&times;</button>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="mx-5 mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200 flex items-center justify-between">
+        <span>{{ error() }}</span>
+        <button type="button" (click)="loadAll()" class="ml-3 text-xs font-medium text-red-700 underline hover:no-underline">Reintentar</button>
+      </div>
+    }
+
+    <!-- Grid de archivos -->
+    <div class="flex-1 overflow-y-auto p-5">
+      @if (loading()) {
+        <div class="flex flex-col items-center justify-center h-full gap-3">
+          <svg class="h-8 w-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <p class="text-sm text-gray-400">Cargando archivos…</p>
+        </div>
+      } @else if (subFolders().length === 0 && visibleFiles().length === 0) {
+        <div class="flex flex-col items-center justify-center h-full text-center">
+          <svg class="h-16 w-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                  d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9v11a2 2 0 01-2 2z"/>
+          </svg>
+          <p class="mt-3 text-sm font-medium text-gray-500">Sin archivos en esta carpeta</p>
+          <button type="button" (click)="triggerUpload()"
+            class="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            + Subir primer archivo
+          </button>
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+          <!-- Subcarpetas como tarjetas -->
+          @for (folder of subFolders(); track folder.id) {
+            <div class="file-card group cursor-pointer" (click)="navigateToFolder(folder)">
+              <div class="file-thumb flex items-center justify-center" style="background:#fefce8">
+                <svg class="h-12 w-12" style="color:#facc15" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/>
+                </svg>
+              </div>
+              @if (renamingFolderId() === folder.id) {
+                <div class="px-2 pb-2 pt-1.5 flex gap-1" (click)="$event.stopPropagation()">
+                  <input type="text" [ngModel]="renamingName()" (ngModelChange)="renamingName.set($event)"
+                    (keydown.enter)="confirmRename(folder)" (keydown.escape)="cancelRename()"
+                    class="flex-1 min-w-0 rounded border border-indigo-400 px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    (click)="$event.stopPropagation()" />
+                  <button type="button" (click)="$event.stopPropagation(); confirmRename(folder)"
+                    class="rounded bg-indigo-600 px-1.5 py-0.5 text-xs text-white hover:bg-indigo-500">✓</button>
+                </div>
+              } @else {
+                <div class="px-2 pb-2 pt-1.5">
+                  <p class="truncate text-xs font-medium text-gray-800" [title]="folder.name">{{ folder.name }}</p>
+                </div>
+              }
+              <div class="file-actions">
+                <button type="button" (click)="$event.stopPropagation(); startRename(folder)" title="Renombrar"
+                  class="action-btn text-indigo-600 hover:bg-indigo-50">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button type="button" (click)="$event.stopPropagation(); deleteFolder(folder)" title="Eliminar carpeta"
+                  class="action-btn text-red-600 hover:bg-red-50">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          }
+          @for (file of visibleFiles(); track file.id) {
+              <div class="file-card group">
+                <!-- Preview thumbnail -->
+                <div class="file-thumb" (click)="openPreview(file)">
+                  @if (isImage(file)) {
+                    <img [src]="dataUrl(file)" [alt]="file.fileName"
+                         class="h-full w-full object-cover transition-transform group-hover:scale-105"/>
+                  } @else {
+                    <span class="text-4xl">{{ fileIcon(file) }}</span>
+                  }
+                </div>
+
+                <!-- Info -->
+                <div class="px-2 pb-2 pt-1.5">
+                  <p class="truncate text-xs font-medium text-gray-800" [title]="file.fileName">{{ file.fileName }}</p>
+                  <p class="text-xs text-gray-400">{{ formatSize(file.fileSizeBytes) }}</p>
+                </div>
+
+                <!-- Acciones -->
+                <div class="file-actions">
+                  <button type="button" (click)="openPreview(file)" title="Ver"
+                    class="action-btn text-indigo-600 hover:bg-indigo-50">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  </button>
+                  <button type="button" (click)="downloadFile(file)" title="Descargar"
+                    class="action-btn text-green-600 hover:bg-green-50">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 4v12m0 0l-4-4m4 4l4-4"/>
+                    </svg>
+                  </button>
+                  <button type="button" (click)="openMoveDialog(file)" title="Mover"
+                    class="action-btn text-yellow-600 hover:bg-yellow-50">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                  </button>
+                  <button type="button" (click)="deleteFile(file)" title="Eliminar"
+                    class="action-btn text-red-600 hover:bg-red-50">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: VISTA PREVIA ═══════════════ -->
+@if (previewFile(); as file) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" (click)="closePreview()">
+    <div class="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-xl bg-white shadow-2xl"
+         (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+        <div>
+          <p class="font-semibold text-gray-900">{{ file.fileName }}</p>
+          <p class="text-xs text-gray-400">{{ formatSize(file.fileSizeBytes) }} · {{ file.createdAt | date:'dd MMM yyyy HH:mm' }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" (click)="downloadFile(file)"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 4v12m0 0l-4-4m4 4l4-4"/>
+            </svg>
+            Descargar
+          </button>
+          <button type="button" (click)="closePreview()"
+            class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="flex-1 overflow-auto p-4">
+        @if (previewLoading()) {
+          <div class="flex flex-col items-center justify-center py-24 gap-3">
+            <svg class="h-8 w-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <p class="text-sm text-gray-400">Cargando vista previa…</p>
+          </div>
+        } @else if (isImage(file)) {
+          <img [src]="dataUrl(file)" [alt]="file.fileName" class="mx-auto max-h-[70vh] rounded-lg object-contain shadow"/>
+        } @else if (isPdf(file)) {
+          <iframe [src]="dataUrl(file)" class="h-[70vh] w-full rounded-lg border border-gray-200"></iframe>
+        } @else {
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <span class="text-7xl">{{ fileIcon(file) }}</span>
+            <p class="mt-4 text-sm text-gray-500">Vista previa no disponible para este tipo de archivo.</p>
+            <button type="button" (click)="downloadFile(file)"
+              class="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+              Descargar para ver
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════ MODAL: MOVER ARCHIVO ═══════════════ -->
+@if (movingFile(); as file) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" (click)="cancelMove()">
+    <div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl" (click)="$event.stopPropagation()">
+      <h3 class="text-base font-semibold text-gray-900">Mover archivo</h3>
+      <p class="mt-1 mb-4 text-sm text-gray-500 truncate">{{ file.fileName }}</p>
+
+      <label class="block text-sm font-medium text-gray-700 mb-1">Carpeta destino</label>
+      <select
+        [ngModel]="moveTargetFolderId()"
+        (ngModelChange)="moveTargetFolderId.set($event || null)"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      >
+        <option [value]="null">Inicio (raíz)</option>
+        @for (node of allFolderNodes(); track node.id) {
+          <option [value]="node.id">{{ node.label }}</option>
+        }
+      </select>
+
+      <div class="mt-5 flex justify-end gap-3">
+        <button type="button" (click)="cancelMove()"
+          class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+          Cancelar
+        </button>
+        <button type="button" (click)="confirmMove()"
+          class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors">
+          Mover
+        </button>
+      </div>
+    </div>
+  </div>
+}

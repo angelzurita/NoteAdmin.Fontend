@@ -1,3 +1,28 @@
 :host {
   display: block;
 }
+
+/* Fusiona el toolbar custom con el editor Quill */
+quill-editor .ql-container {
+  border-top: none !important;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+quill-editor{
+   min-width: stretch;
+}
+ 
+
+
+/* El botón de emoji en el toolbar de Quill */
+#toolbar-notes-create .ql-emoji {
+  width: auto;
+  padding: 2px 4px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.textBox {
+  margin-top: 0.25rem;
+  background-color: rgb(255, 255, 255);
+}

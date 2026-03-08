@@ -1,34 +1,50 @@
 <div class="mx-auto max-w-3xl space-y-6">
-  @if (loading()) {
+    @if (loading()) {
     <app-loading />
-  } @else if (error(); as errMsg) {
+    } @else if (error(); as errMsg) {
     <app-error [message]="errMsg" (retry)="retry()" />
-  } @else if (note(); as n) {
+    } @else if (note(); as n) {
     <!-- Header -->
     <div class="flex items-start justify-between">
-      <div>
-        <a routerLink="/notes" class="text-sm text-indigo-600 hover:text-indigo-500 transition-colors">&larr; Volver a notas</a>
-        <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ n.title }}</h1>
-        <time class="mt-1 block text-sm text-gray-400">Creada el {{ n.createdAt | date: 'dd MMM yyyy, HH:mm' }}</time>
-      </div>
-      <div class="flex gap-2">
-        <a
-          [routerLink]="['/notes', n.id, 'edit']"
-          class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Editar
-        </a>
-        <button
-          class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors"
-          (click)="deleteNote()"
-        >
-          Eliminar
-        </button>
-      </div>
+        <div>
+            <a routerLink="/notes" class="text-sm text-indigo-600 hover:text-indigo-500 transition-colors">&larr; Volver
+                a notas</a>
+            <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ n.title }}</h1>
+            <div class="mt-1 flex items-center gap-3">
+                <time class="text-sm text-gray-400">Creada el {{ n.createdAt | date: 'dd MMM yyyy, HH:mm' }}</time>
+                @if (n.category) {
+                <span
+                    class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                    {{ n.category.name }}
+                </span>
+                }
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a [routerLink]="['/notes', n.id, 'edit']"
+                class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                Editar
+            </a>
+            <button
+                class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors"
+                (click)="deleteNote()">
+                Eliminar
+            </button>
+        </div>
     </div>
 
-    <!-- Content -->
-    <article class="prose max-w-none rounded-xl border border-gray-200 bg-white p-6 shadow-sm" [innerHTML]="n.content">
-    </article>
-  }
+<article
+  class="prose prose-slate 
+         prose-p:leading-relaxed 
+         prose-p:mb-4
+         max-w-none 
+         rounded-2xl 
+         border 
+         border-gray-200 
+         bg-white 
+         p-8 
+         shadow-md"
+  [innerHTML]="getFormattedContent(n.content)">
+</article>
+    }
 </div>
