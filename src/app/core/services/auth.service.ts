@@ -97,12 +97,17 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearSession();
+    this.router.navigate(['/auth/login']);
+  }
+
+  /** Limpia el estado de sesión sin navegar. Usar desde el constructor / SSR. */
+  private clearSession(): void {
     this.currentUser.set(null);
     this.tokenExpiration.set(0);
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
     }
-    this.router.navigate(['/auth/login']);
   }
 
   getAccessToken(): string | null {
@@ -132,13 +137,13 @@ export class AuthService {
           : NaN;
 
     if (!Number.isFinite(expSeconds) || expSeconds <= 0) {
-      this.logout();
+      this.clearSession(); // no navegar desde el constructor
       return;
     }
 
     const expirationMs = expSeconds * 1000;
     if (expirationMs <= Date.now()) {
-      this.logout();
+      this.clearSession(); // no navegar desde el constructor
       return;
     }
 

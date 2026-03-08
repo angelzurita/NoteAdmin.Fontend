@@ -18,7 +18,13 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client,
   },
   {
+    path: 'files/**',
+    renderMode: RenderMode.Client,
+  },
+  {
+    // Raíz y cualquier otra ruta: Client para evitar que authGuard
+    // falle en el servidor (sin localStorage) y genere bucles de redirección.
     path: '**',
-    renderMode: RenderMode.Prerender,
+    renderMode: RenderMode.Client,
   },
 ];

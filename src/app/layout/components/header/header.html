@@ -1,7 +1,25 @@
 <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
   <h2 class="text-lg font-semibold text-gray-800">Panel de Administración</h2>
 
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-3">
+    <!-- AI Chat toggle -->
+    <button
+      class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+      [class.bg-indigo-600]="aiChatOpen()"
+      [class.text-white]="aiChatOpen()"
+      [class.bg-indigo-50]="!aiChatOpen()"
+      [class.text-indigo-700]="!aiChatOpen()"
+      [class.hover:bg-indigo-100]="!aiChatOpen()"
+      [class.hover:bg-indigo-700]="aiChatOpen()"
+      (click)="toggleAiChat()"
+      title="Asistente IA"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
+        <path fill-rule="evenodd" d="M10 2.5c-1.31 0-2.526.386-3.546 1.051a.75.75 0 0 1-.82-1.256A8 8 0 0 1 18 9a22.47 22.47 0 0 1-1.228 7.351.75.75 0 1 1-1.417-.49A20.97 20.97 0 0 0 16.5 9 6.5 6.5 0 0 0 10 2.5zM4.333 4.416a.75.75 0 0 1 .218 1.038A6.47 6.47 0 0 0 3.5 9a7.966 7.966 0 0 1-1.293 4.362.75.75 0 0 1-1.257-.819A6.466 6.466 0 0 0 2 9c0-1.61.476-3.11 1.295-4.365a.75.75 0 0 1 1.038-.219zM10 6.12a3 3 0 0 0-3.001 3.041 11.455 11.455 0 0 1-2.697 7.24.75.75 0 0 1-1.148-.965A9.957 9.957 0 0 0 5.5 9c0-.028.002-.055.004-.082A4.5 4.5 0 0 1 14.5 9c.004.028.004.055.004.082A9.954 9.954 0 0 0 17 16.296a.75.75 0 0 1-1.148.966A11.454 11.454 0 0 1 13.001 9.04 3 3 0 0 0 10 6.12zm0 2.88a.75.75 0 0 1 .75.75 7.448 7.448 0 0 1-1.908 5.032.75.75 0 1 1-1.125-.993A5.948 5.948 0 0 0 9.25 9.75.75.75 0 0 1 10 9zm3.391 3.143a.75.75 0 0 1 1.032.233c.402.625.738 1.297.996 2.008a.75.75 0 0 1-1.416.499 11.175 11.175 0 0 0-.845-1.706.75.75 0 0 1 .233-1.034z" clip-rule="evenodd" />
+      </svg>
+      <span>IA</span>
+    </button>
+
     <span class="text-sm text-gray-600">{{ userName() }}</span>
     <button
       class="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
