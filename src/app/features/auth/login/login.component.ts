@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -12,7 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -24,6 +24,14 @@ export class LoginComponent {
 
   readonly errorMessage = signal<string | null>(null);
   readonly isSubmitting = signal(false);
+  /** With the lab account there is no form here: we go straight to it */
+  readonly usesLabAccount = this.authService.usesLabAccount;
+
+  ngOnInit(): void {
+    if (this.usesLabAccount) {
+      this.authService.signInWithLabAccount();
+    }
+  }
 
   onSubmit(): void {
     if (this.loginForm.invalid) {

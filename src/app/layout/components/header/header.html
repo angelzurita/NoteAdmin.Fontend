@@ -1,8 +1,9 @@
 <header class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-  <h2 class="text-lg font-semibold text-gray-800">Panel de Administración</h2>
+  <h2 class="text-lg font-semibold text-gray-800">Notes</h2>
 
   <div class="flex items-center gap-3">
-    <!-- AI Chat toggle -->
+    <!-- AI Chat toggle (only when the server has AI enabled) -->
+    @if (aiEnabled()) {
     <button
       class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
       [class.bg-indigo-600]="aiChatOpen()"
@@ -19,6 +20,7 @@
       </svg>
       <span>IA</span>
     </button>
+    }
 
     <span class="text-sm text-gray-600">{{ userName() }}</span>
     <button

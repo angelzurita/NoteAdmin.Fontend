@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 
-import { AuthService } from '../../../core/services';
+import { AuthService, ConfigService } from '../../../core/services';
 import { AiChatService } from '../../../features/ai/services/ai-chat.service';
 
 @Component({
@@ -12,9 +12,11 @@ import { AiChatService } from '../../../features/ai/services/ai-chat.service';
 export class HeaderComponent {
   private readonly authService = inject(AuthService);
   private readonly aiChatService = inject(AiChatService);
+  private readonly configService = inject(ConfigService);
 
   readonly userName = computed(() => this.authService.user()?.name ?? '');
   readonly aiChatOpen = this.aiChatService.isOpen;
+  readonly aiEnabled = computed(() => this.configService.config().ai);
 
   toggleAiChat(): void {
     this.aiChatService.toggle();

@@ -2,10 +2,16 @@
   <div class="w-full max-w-md space-y-8">
     <!-- Header -->
     <div class="text-center">
-      <h1 class="text-3xl font-bold tracking-tight text-gray-900">NotesAdmin</h1>
-      <p class="mt-2 text-sm text-gray-600">Ingresa a tu cuenta para continuar</p>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Notes</h1>
+      <p class="mt-2 text-sm text-gray-600">Tus notas, categorías y archivos</p>
     </div>
 
+    @if (usesLabAccount) {
+      <div class="mt-8 rounded-xl bg-white p-8 text-center shadow-lg">
+        <p class="text-sm text-gray-700">Entrando con tu cuenta del laboratorio…</p>
+        <a href="/auth/sso" class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500">Continuar</a>
+      </div>
+    } @else {
     <!-- Form -->
     <form
       [formGroup]="loginForm"
@@ -80,5 +86,6 @@
         Demo: admin&#64;notes.com / admin123
       </p>
     </form>
+    }
   </div>
 </div>

@@ -1,4 +1,5 @@
+// `ng serve`: API running locally (dotnet run, CORS "DevFrontend" allows http://localhost:4200)
 export const environment = {
   production: false,
-  apiUrl: 'https://notesadmin.zuritaserver.com/api',
+  apiUrl: 'http://localhost:5000/api',
 };

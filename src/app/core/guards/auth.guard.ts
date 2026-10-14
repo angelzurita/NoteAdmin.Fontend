@@ -11,5 +11,11 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
+  // With the lab account there is no local login page: go straight to it
+  if (authService.usesLabAccount) {
+    authService.signInWithLabAccount();
+    return false;
+  }
+
   return router.createUrlTree(['/auth/login']);
 };

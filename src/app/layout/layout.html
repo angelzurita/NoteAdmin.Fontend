@@ -10,4 +10,6 @@
   </div>
 </div>
 
-<app-ai-chat />
+@if (aiEnabled()) {
+  <app-ai-chat />
+}

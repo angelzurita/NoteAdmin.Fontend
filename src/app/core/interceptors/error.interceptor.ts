@@ -13,7 +13,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       switch (error.status) {
         case 401:
-          authService.logout();
+          // Session closed or expired (not for the login form itself: wrong password is also 401)
+          if (!req.url.endsWith('/auth/login')) {
+            authService.sessionExpired();
+          }
           break;
         case 403:
           router.navigate(['/dashboard']);
