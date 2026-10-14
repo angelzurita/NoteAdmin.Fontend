@@ -1,14 +1,16 @@
-<div class="flex h-[calc(100vh-4rem)] gap-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<!-- Phones: folders on top, files below (the page scrolls). md+: two columns filling the screen. -->
+<div class="flex flex-col gap-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm md:h-[calc(100dvh-8rem)] md:flex-row">
 
   <!-- ═══════════════ SIDEBAR DE CARPETAS ═══════════════ -->
-  <aside class="flex w-56 flex-shrink-0 flex-col border-r border-gray-200 bg-gray-50">
+  <aside class="flex max-h-56 w-full flex-shrink-0 flex-col border-b border-gray-200 bg-gray-50 md:max-h-none md:w-56 md:border-b-0 md:border-r">
     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
       <span class="text-xs font-semibold uppercase tracking-widest text-gray-500">Carpetas</span>
       <button
         type="button"
         (click)="showNewFolderInput.set(!showNewFolderInput())"
         title="Nueva carpeta"
-        class="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-indigo-600 transition-colors"
+        aria-label="Nueva carpeta"
+        class="rounded p-2 text-gray-400 md:p-1 hover:bg-gray-200 hover:text-indigo-600 transition-colors"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -88,7 +90,7 @@
             type="button"
             (click)="deleteFolder(node.folder)"
             title="Eliminar carpeta"
-            class="absolute right-1 hidden group-hover:flex items-center justify-center rounded p-0.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+            class="folder-delete absolute right-1 hidden group-hover:flex items-center justify-center rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600"
           >
             <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -100,12 +102,12 @@
   </aside>
 
   <!-- ═══════════════ ÁREA PRINCIPAL ═══════════════ -->
-  <div class="flex flex-1 flex-col overflow-hidden">
+  <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
     <!-- Toolbar -->
-    <div class="flex items-center gap-3 border-b border-gray-200 bg-white px-5 py-3">
+    <div class="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-white px-3 py-3 sm:gap-3 sm:px-5">
       <!-- Breadcrumbs -->
-      <nav class="flex items-center gap-1 text-sm min-w-0 flex-1 overflow-hidden">
+      <nav class="flex min-w-0 basis-full items-center gap-1 overflow-hidden text-sm sm:flex-1 sm:basis-auto">
         <button type="button" (click)="navigateToRoot()"
           class="shrink-0 font-medium text-gray-500 hover:text-indigo-600 transition-colors">
           Inicio
@@ -123,12 +125,12 @@
             {{ crumb.name }}
           </button>
         }
-        <span class="ml-1 shrink-0 text-xs font-normal text-gray-400">
+        <span class="ml-1 hidden shrink-0 text-xs font-normal text-gray-400 lg:inline">
           ({{ subFolders().length }} carpetas · {{ visibleFiles().length }} archivos)
         </span>
       </nav>
 
-      <div class="relative flex-1 max-w-xs ml-auto">
+      <div class="relative min-w-0 flex-1 sm:ml-auto sm:max-w-xs">
         <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
              fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -146,13 +148,14 @@
       <button
         type="button"
         (click)="triggerUpload()"
-        class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+        class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 sm:px-4"
+        aria-label="Subir archivos"
       >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"/>
         </svg>
-        Subir archivos
+        <span class="hidden sm:inline">Subir archivos</span><span class="sm:hidden">Subir</span>
       </button>
 
       <input
@@ -165,21 +168,21 @@
     </div>
 
     @if (uploadError()) {
-      <div class="mx-5 mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200 flex items-center justify-between">
+      <div class="mx-3 mt-3 rounded-lg sm:mx-5 bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200 flex items-center justify-between">
         <span>{{ uploadError() }}</span>
         <button type="button" (click)="uploadError.set('')" class="ml-2 text-red-500 hover:text-red-700">&times;</button>
       </div>
     }
 
     @if (error()) {
-      <div class="mx-5 mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200 flex items-center justify-between">
+      <div class="mx-3 mt-3 rounded-lg sm:mx-5 bg-red-50 px-4 py-2 text-sm text-red-700 border border-red-200 flex items-center justify-between">
         <span>{{ error() }}</span>
         <button type="button" (click)="loadAll()" class="ml-3 text-xs font-medium text-red-700 underline hover:no-underline">Reintentar</button>
       </div>
     }
 
     <!-- Grid de archivos -->
-    <div class="flex-1 overflow-y-auto p-5">
+    <div class="min-h-[50vh] flex-1 overflow-y-auto p-3 sm:p-5 md:min-h-0">
       @if (loading()) {
         <div class="flex flex-col items-center justify-center h-full gap-3">
           <svg class="h-8 w-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
@@ -302,15 +305,15 @@
 <!-- ═══════════════ MODAL: VISTA PREVIA ═══════════════ -->
 @if (previewFile(); as file) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" (click)="closePreview()">
-    <div class="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-xl bg-white shadow-2xl"
+    <div class="relative flex max-h-[90dvh] w-full max-w-3xl flex-col rounded-xl bg-white shadow-2xl"
          (click)="$event.stopPropagation()">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-gray-200 px-5 py-3">
-        <div>
-          <p class="font-semibold text-gray-900">{{ file.fileName }}</p>
+      <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-4 py-3 sm:px-5">
+        <div class="min-w-0">
+          <p class="break-words font-semibold text-gray-900">{{ file.fileName }}</p>
           <p class="text-xs text-gray-400">{{ formatSize(file.fileSizeBytes) }} · {{ file.createdAt | date:'dd MMM yyyy HH:mm' }}</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex shrink-0 items-center gap-2">
           <button type="button" (click)="downloadFile(file)"
             class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -341,7 +344,7 @@
         } @else if (isImage(file)) {
           <img [src]="dataUrl(file)" [alt]="file.fileName" class="mx-auto max-h-[70vh] rounded-lg object-contain shadow"/>
         } @else if (isPdf(file)) {
-          <iframe [src]="dataUrl(file)" class="h-[70vh] w-full rounded-lg border border-gray-200"></iframe>
+          <iframe [src]="dataUrl(file)" class="h-[60dvh] w-full sm:h-[70vh] rounded-lg border border-gray-200"></iframe>
         } @else {
           <div class="flex flex-col items-center justify-center py-16 text-center">
             <span class="text-7xl">{{ fileIcon(file) }}</span>
@@ -360,7 +363,7 @@
 <!-- ═══════════════ MODAL: MOVER ARCHIVO ═══════════════ -->
 @if (movingFile(); as file) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" (click)="cancelMove()">
-    <div class="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl" (click)="$event.stopPropagation()">
+    <div class="w-full max-w-sm rounded-xl bg-white p-4 shadow-2xl sm:p-6" (click)="$event.stopPropagation()">
       <h3 class="text-base font-semibold text-gray-900">Mover archivo</h3>
       <p class="mt-1 mb-4 text-sm text-gray-500 truncate">{{ file.fileName }}</p>
 

@@ -10,6 +10,8 @@ export interface AppConfig {
   sso: boolean;
   /** Public URL of the lab account */
   cuenta?: string | null;
+  /** Lab portal (Disciplina): where the "back" button goes */
+  portal?: string | null;
 }
 
 const DEFAULT_CONFIG: AppConfig = { sso: false };

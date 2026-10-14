@@ -94,3 +94,25 @@
   backdrop-filter: blur(4px);
 }
 
+
+/* ─── Pantallas táctiles: no hay "hover", las acciones siempre visibles ─── */
+@media (hover: none) {
+  .file-actions {
+    position: static;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    border-top: 1px solid #f3f4f6;
+    padding: 0.25rem;
+  }
+
+  .action-btn {
+    padding: 0.5rem;
+    box-shadow: none;
+    background-color: transparent;
+  }
+
+  .folder-delete {
+    display: flex;
+  }
+}

@@ -1,3 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
+
+/* Editor (Quill): the toolbar wraps on narrow screens instead of overflowing */
+.ql-toolbar.ql-snow {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+.ql-container.ql-snow {
+  max-width: 100%;
+}
+
+/* Long words/URLs in notes never push the page sideways */
+.ql-editor,
+.prose {
+  overflow-wrap: anywhere;
+}
+.prose img,
+.ql-editor img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* iOS: inputs under 16px make Safari zoom in when focused */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

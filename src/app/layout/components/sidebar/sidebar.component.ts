@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, ChangeDetectionStrategy, inject, input, output, signal, computed } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../core/services';
 
@@ -18,8 +18,12 @@ interface NavItem {
 })
 export class SidebarComponent {
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
+  /** Open as a drawer (phones) */
+  readonly open = input(false);
+  /** The drawer asked to close (close button) */
+  readonly closed = output<void>();
 
+  /** Narrow (icons only) mode, desktop only */
   readonly collapsed = signal(false);
   readonly user = this.authService.user;
   readonly userInitial = computed(() => this.user()?.name?.charAt(0).toUpperCase() ?? '?');
