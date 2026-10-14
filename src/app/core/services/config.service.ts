@@ -10,11 +10,9 @@ export interface AppConfig {
   sso: boolean;
   /** Public URL of the lab account */
   cuenta?: string | null;
-  /** AI assistant available */
-  ai: boolean;
 }
 
-const DEFAULT_CONFIG: AppConfig = { sso: false, ai: false };
+const DEFAULT_CONFIG: AppConfig = { sso: false };
 
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
