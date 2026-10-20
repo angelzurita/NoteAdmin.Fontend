@@ -1,3 +1,4 @@
+import { cambiosPendientesGuard } from '../../core/guards/cambios-pendientes.guard';
 import { Routes } from '@angular/router';
 
 export const NOTES_ROUTES: Routes = [
@@ -8,6 +9,7 @@ export const NOTES_ROUTES: Routes = [
   },
   {
     path: 'create',
+    canDeactivate: [cambiosPendientesGuard],
     loadComponent: () =>
       import('./components/notes-create/notes-create.component').then((m) => m.NotesCreateComponent),
   },
@@ -18,6 +20,7 @@ export const NOTES_ROUTES: Routes = [
   },
   {
     path: ':id/edit',
+    canDeactivate: [cambiosPendientesGuard],
     loadComponent: () =>
       import('./components/notes-edit/notes-edit.component').then((m) => m.NotesEditComponent),
   },

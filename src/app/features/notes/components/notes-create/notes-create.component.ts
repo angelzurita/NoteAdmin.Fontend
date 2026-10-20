@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, ViewChild, signal } from '@angular/core';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Component, HostListener, ChangeDetectionStrategy, inject, OnInit, ViewChild, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { QuillModule, QuillEditorComponent } from 'ngx-quill';
@@ -14,6 +15,12 @@ import { CategoriesFacade } from '../../../categories/services/categories-facade
   styleUrl: './notes-create.css',
 })
 export class NotesCreateComponent implements OnInit {
+  private readonly navAuth = inject(AuthService);
+  @HostListener('window:beforeunload', ['$event'])
+  protegerRecarga(event: BeforeUnloadEvent): void {
+    if (this.form.dirty && this.navAuth.isAuthenticated()) { event.preventDefault(); event.returnValue = ''; }
+  }
+
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(NotesFacade);
   private readonly categoriesFacade = inject(CategoriesFacade);
@@ -79,6 +86,7 @@ export class NotesCreateComponent implements OnInit {
 
     const { title, content, categoryId } = this.form.getRawValue();
     this.facade.create({ title, content, categoryId }).subscribe(() => {
+      this.form.markAsPristine();
       this.router.navigate(['/notes']);
     });
   }

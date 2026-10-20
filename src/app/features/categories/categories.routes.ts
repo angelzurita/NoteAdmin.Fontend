@@ -1,3 +1,4 @@
+import { cambiosPendientesGuard } from '../../core/guards/cambios-pendientes.guard';
 import type { Routes } from '@angular/router';
 
 export const CATEGORIES_ROUTES: Routes = [
@@ -10,6 +11,7 @@ export const CATEGORIES_ROUTES: Routes = [
   },
   {
     path: 'create',
+    canDeactivate: [cambiosPendientesGuard],
     loadComponent: () =>
       import('./components/categories-create/categories-create.component').then(
         (m) => m.CategoriesCreateComponent,
@@ -17,6 +19,7 @@ export const CATEGORIES_ROUTES: Routes = [
   },
   {
     path: ':id/edit',
+    canDeactivate: [cambiosPendientesGuard],
     loadComponent: () =>
       import('./components/categories-edit/categories-edit.component').then(
         (m) => m.CategoriesEditComponent,
