@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Component, HostListener, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 
@@ -12,6 +13,12 @@ import { CategoriesFacade } from '../../services/categories-facade.service';
   styleUrl: './categories-edit.css',
 })
 export class CategoriesEditComponent implements OnInit {
+  private readonly navAuth = inject(AuthService);
+  @HostListener('window:beforeunload', ['$event'])
+  protegerRecarga(event: BeforeUnloadEvent): void {
+    if (this.form.dirty && this.navAuth.isAuthenticated()) { event.preventDefault(); event.returnValue = ''; }
+  }
+
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(CategoriesFacade);
   private readonly route = inject(ActivatedRoute);
@@ -58,7 +65,7 @@ export class CategoriesEditComponent implements OnInit {
 const formValue = this.form.getRawValue();
 
 this.facade.update(this.categoryId, formValue).subscribe({
-  next: () => this.router.navigate(['/categories']),
+  next: () => { this.form.markAsPristine(); this.router.navigate(['/categories']); },
 });
   }
 
