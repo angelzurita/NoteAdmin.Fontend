@@ -34,7 +34,7 @@ describe('AuthService', () => {
 
   function setup(): AuthService {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([{ path: 'auth/login', redirectTo: '', pathMatch: 'full' }, { path: '', children: [] }])],
     });
     return TestBed.inject(AuthService);
   }
