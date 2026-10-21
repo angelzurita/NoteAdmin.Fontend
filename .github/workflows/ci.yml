@@ -1,0 +1,38 @@
+name: CI
+on:
+  pull_request:
+    branches: [dev, qa, relase, prd, main, lab]
+  push:
+    branches: [dev, qa, relase, prd, main, lab, 'fix/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Dependencias fijadas
+        run: |
+          npm ci --ignore-scripts
+      - name: Chromium aislado
+        run: npx --yes playwright@1.48.2 install chromium --with-deps
+      - name: Historial, compilación y navegador con datos ficticios
+        env:
+          CHROMIUM_PATH: /home/runner/.cache/ms-playwright/chromium-1140/chrome-linux/chrome
+        run: |
+          npm test -- --watch=false
+          npm run build
+          node scripts/probar-navegacion.cjs
